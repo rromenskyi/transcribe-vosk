@@ -47,10 +47,19 @@ func main() {
 	}
 	defer conn.Close()
 
-	// Отправка аудио на сервер Vosk
-	err = conn.WriteMessage(websocket.BinaryMessage, audioData)
-	if err != nil {
-		log.Fatal("Failed to send audio data:", err)
+	const chunkSize = 1048576
+
+	// Чтение и отправка аудиофайла по частям
+	for i := 0; i < len(audioData); i += chunkSize {
+	    end := i + chunkSize
+	    if end > len(audioData) {
+	        end = len(audioData)
+	    }
+	    chunk := audioData[i:end]
+	    err := conn.WriteMessage(websocket.BinaryMessage, chunk)
+	    if err != nil {
+	        log.Fatal("Failed to write audio chunk:", err)
+	    }
 	}
 
 	// Получение результата распознавания
